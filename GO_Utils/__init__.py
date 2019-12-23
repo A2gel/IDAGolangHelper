@@ -15,7 +15,8 @@ class GoSettings(object):
         self.structCreator = Utils.StructCreator(self.bt_obj)
         self.processor = None
         self.typer = None
-
+        self.binaryPath = idaapi.get_path(idaapi.PATH_TYPE_IDB)[:-4]
+        
     def getVal(self, key):
         if key in self.storage:
             return self.storage[key]
@@ -38,19 +39,26 @@ class GoSettings(object):
         return
 
     def tryFindGoVersion(self):
-        fmd = self.getVal("firstModData")
-        if fmd is None:
-            return "This should be go <= 1.4 : No module data found"
-        vers = "go1.5 or go1.6"
-        if Firstmoduledata.isGo17(fmd, self.bt_obj) is True:
-            vers = "go1.7"
-        elif Firstmoduledata.isGo18_10(fmd, self.bt_obj) is True:
-            vers = "go1.8 or go1.9 or go1.10"
-        return "According to moduleData struct is should be %s" % (vers)
+        f = pygore.GoFile(self.binaryPath)
+        v = f.get_compiler_version()
+        f.close()
+        return "Go Compiler Version should be %s" % (v.name)
 
     def renameFunctions(self):
         gopcln_tab = self.getGopcln()
         Gopclntab.rename(gopcln_tab, self.bt_obj)
+    
+    def renameStructs(self):
+        f = pygore.GoFile(self.binaryPath)
+        c = f.get_compiler_version()
+        print('Compiler: {}\nTimestamp: {}\nSHA {}\n'.format(c.name, c.timestamp, c.sha))
+
+        #pkgs = f.get_packages()
+        types = f.get_types()
+        f.close()
+        for type in types:
+            Utils.rename(type.addr, type.name)
+            print type.addr, type.name
 
     def getVersionByString(self):
         pos = idautils.Functions().next()
