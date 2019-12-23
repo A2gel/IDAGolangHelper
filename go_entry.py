@@ -23,9 +23,9 @@ class MyForm(Form):
 GoLoader
 
 {FormChangeCb}
-<##Try to detemine go version based on moduledata:{iButton1}>
-<##Try to detemine go version based on version string:{iButton2}>
-<##Rename functions:{iButton3}>
+<##Try to detemine go version:{iButton1}>
+<##Rename functions:{iButton2}>
+<##Rename Structs:{iButton3}>
 Go version:
 <Go1.2:{r2}>
 <Go1.4:{r4}>
@@ -49,16 +49,15 @@ Go version:
 
 
     def OnButton1(self, code=0):
-        GO_SETTINGS.findModuleData()
         print GO_SETTINGS.tryFindGoVersion()
 
 
-    def OnButton3(self, code=0):
-        GO_SETTINGS.renameFunctions()
-
     def OnButton2(self, code=0):
-        print GO_SETTINGS.getVersionByString()
-
+        GO_SETTINGS.renameFunctions()
+    
+    def OnButton3(self, code=0):
+        GO_SETTINGS.renameStructs()
+    
     def OnButton4(self, code=0):
         typ =  self.GetControlValue(self.cGoVers)
         GO_SETTINGS.createTyper(typ)
