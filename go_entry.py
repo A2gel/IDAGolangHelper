@@ -79,6 +79,7 @@ def ida_main():
     # Create form
     global f
     idaapi.add_hotkey("Shift-S", GO_Utils.GoStrings.stringify)
+    idaapi.add_hotkey("Shift-D", GO_SETTINGS.getStructDefByCursor)
     f = MyForm()
 
     # Compile (in order to populate the controls)

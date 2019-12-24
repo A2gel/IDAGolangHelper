@@ -16,7 +16,8 @@ class GoSettings(object):
         self.structCreator = Utils.StructCreator(self.bt_obj)
         self.processor = None
         self.typer = None
-        self.binaryPath = idaapi.get_path(idaapi.PATH_TYPE_IDB)[:-4]
+        self.binaryPath = idc.GetInputFilePath()
+        self.structsDef = {}
         
     def getVal(self, key):
         if key in self.storage:
@@ -49,6 +50,48 @@ class GoSettings(object):
         gopcln_tab = self.getGopcln()
         Gopclntab.rename(gopcln_tab, self.bt_obj)
     
+    def _getStructDef(self,t):
+        kinds = [ 
+            "invalid",
+            "bool",
+	    "int",
+	    "int8",
+	    "int16",
+	    "int32",
+	    "int64",
+	    "uint",
+	    "uint8",
+	    "uint16",
+	    "uint32",
+	    "uint64",
+	    "uintptr",
+	    "float32",
+	    "float64",
+	    "complex64",
+	    "complex128",
+	    "array",
+	    "chan",
+	    "func",
+	    "interface",
+	    "map",
+	    "ptr",
+	    "slice",
+	    "string",
+	    "struct",
+	    "unsafe.Pointer"
+        ]
+        if kinds[t.kind] != "struct":
+            return ""
+        buf = "type %s struct{" % t.name
+        for f in t.fields:
+            if f.fieldAnon:
+                buf += "\n\t%s" % f
+            else:
+                buf += "\n\t%s %s" % (f.fieldName, f.name)
+        if len(t.fields) > 0:
+            buf += "\n"
+        return buf + "}"
+
     def renameStructs(self):
         f = pygore.GoFile(self.binaryPath)
         c = f.get_compiler_version()
@@ -57,9 +100,15 @@ class GoSettings(object):
         #pkgs = f.get_packages()
         types = f.get_types()
         f.close()
-        for type in types:
-            Utils.rename(type.addr, type.name)
-            print type.addr, type.name
+        for t in types:
+            Utils.rename(t.addr, t.name)
+
+            self.structsDef[t.addr] = self._getStructDef(t)
+            print t.addr, t.name
+    
+    def getStructDefByCursor(self):
+        addr = idc.GetOperandValue(idc.here(),1)
+        print(self.structsDef[addr])
 
     def getVersionByString(self):
         pos = idautils.Functions().next()
